@@ -38,28 +38,58 @@ class Writer:
             self.asm_code += (f"@SP\n"
                               f"A=M-1\n"
                               f"M=-M\n")
-        # eq
-        elif command == "eq":
-            pass
-        # gt
-        elif command == "gt":
-            pass
-        # lt
-        elif command == "lt":
-            pass
+        # eq / gt / lt are all written in the same way
+        elif command in ["eq", "gt", "lt"]:
+            self.asm_code += (f"@SP\n"
+                              f"M=M-1\n"
+                              f"A=M\n"
+                              f"D=-M\n"
+                              f"A=A-1\n"
+                              f"D=D+M\n"
+                              f"@TRUE{op_num}")
+            if command == "eq":
+                self.asm_code += "D;JEQ\n"
+            elif command == "gt":
+                self.asm_code += "D;JGT\n"
+            else:
+                self.asm_code += "D;JLT\n"
+            self.asm_code += (f"D=0\n"
+                              f"@CONT{op_num}\n"
+                              f"0;JMP\n"
+                              f"(TRUE{op_num})\n"
+                              f"D=-1\n"
+                              f"(CONT{op_num})\n"
+                              f"@SP\n"
+                              f"A=M-1\n"
+                              f"M=D\n")
+            self.op_num += 1
         # And
         elif command == "and":
-            pass
+            self.asm_code += (f"@SP\n"
+                              f"M=M-1\n"
+                              f"A=M\n"
+                              f"D=M\n"
+                              f"A=A-1\n"
+                              f"D=D&M\n"
+                              f"M=D\n")
         # Or
         elif command == "or":
-            pass
+            self.asm_code += (f"@SP\n"
+                              f"M=M-1\n"
+                              f"A=M\n"
+                              f"D=M\n"
+                              f"A=A-1\n"
+                              f"D=D|M\n"
+                              f"M=D\n")
         # not
         else:
-            pass
+            self.asm_code += (f"@SP\n"
+                              f"A=M-1\n"
+                              f"M=!M\n")
         pass
 
     def write_push_pop(self, command: str, segment: str, index: int):
-        asm_code = f"// {command} {segment} {index}\n"
+        self.asm_code = f"// {command} {segment} {index}\n"
         if command == "C_POP":
 
             # Temporarily change ARG/LCL/THIS/THAT to the addition
@@ -137,6 +167,5 @@ class Writer:
                               f"@SP\n"
                               f"M=M+1\n")
 
-
-def close():
-    pass
+    def close(self):
+        pass
