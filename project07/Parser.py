@@ -11,7 +11,6 @@ class Parser:
         with open(file, "r") as f:
             file_lines = f.readlines()
             for line in file_lines:
-                line = line.replace(" ", "")
                 line = line.replace("\n", "")
                 comment_position = line.find("/")
                 if comment_position != -1:

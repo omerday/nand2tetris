@@ -13,8 +13,7 @@ class Writer:
         self.filename = file
         self.asm_code = ""
 
-    def write_arithmetics(self, command: str, op_num=0):
-        self.asm_code += f"{command}"
+    def write_arithmetics(self, command: str):
         # add
         if command == "add":
             self.asm_code += (f"@SP\n"
@@ -46,7 +45,7 @@ class Writer:
                               f"D=-M\n"
                               f"A=A-1\n"
                               f"D=D+M\n"
-                              f"@TRUE{op_num}")
+                              f"@TRUE{self.op_num}\n")
             if command == "eq":
                 self.asm_code += "D;JEQ\n"
             elif command == "gt":
@@ -54,11 +53,11 @@ class Writer:
             else:
                 self.asm_code += "D;JLT\n"
             self.asm_code += (f"D=0\n"
-                              f"@CONT{op_num}\n"
+                              f"@CONT{self.op_num}\n"
                               f"0;JMP\n"
-                              f"(TRUE{op_num})\n"
+                              f"(TRUE{self.op_num})\n"
                               f"D=-1\n"
-                              f"(CONT{op_num})\n"
+                              f"(CONT{self.op_num})\n"
                               f"@SP\n"
                               f"A=M-1\n"
                               f"M=D\n")
@@ -89,7 +88,6 @@ class Writer:
         pass
 
     def write_push_pop(self, command: str, segment: str, index: int):
-        self.asm_code = f"// {command} {segment} {index}\n"
         if command == "C_POP":
 
             # Temporarily change ARG/LCL/THIS/THAT to the addition
@@ -121,7 +119,7 @@ class Writer:
             # Put in @filname.i
             elif segment == "static":
                 self.asm_code += (f"@{self.filename}.{index}\n"
-                                  f"M=D")
+                                  f"M=D\n")
 
             # Insert value and remove the index back
             elif segment in self.segments.keys():
@@ -158,7 +156,11 @@ class Writer:
 
             elif segment == "static":
                 self.asm_code += (f"@{self.filename}.{index}\n"
-                                  f"D=M")
+                                  f"D=M\n")
+
+            elif segment == "constant":
+                self.asm_code += (f"@{index}\n"
+                                  f"D=A\n")
 
             # Add D to stack and raise by 1
             self.asm_code += (f"@SP\n"
