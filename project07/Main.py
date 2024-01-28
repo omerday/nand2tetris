@@ -34,7 +34,7 @@ else:
     while parser.has_more_lines():
         parser.advance()
         c_type = parser.command_type()
-        # writer.asm_code += f"// {parser.current_instruction}\n"
+        writer.asm_code += f"// {parser.current_instruction}\n"
         if c_type in ["C_POP", "C_PUSH"]:
             writer.write_push_pop(c_type, parser.arg1(), parser.arg2())
         else:
