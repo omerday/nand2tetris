@@ -12,6 +12,7 @@ class Parser:
             file_lines = f.readlines()
             for line in file_lines:
                 line = line.replace("\n", "")
+                line = line.replace("\t", "")
                 comment_position = line.find("/")
                 if comment_position != -1:
                     line = line[:comment_position]
@@ -27,7 +28,8 @@ class Parser:
 
     def command_type(self):
         command_parts = self.current_instruction.split(" ")
-        return f"C_{command_parts[0].upper()}"
+        print(command_parts)
+        return f"C_{command_parts[0].upper()}" if command_parts[0] != "if-goto" else "C_IF"
 
     def arg1(self):
         command_parts = self.current_instruction.split(" ")

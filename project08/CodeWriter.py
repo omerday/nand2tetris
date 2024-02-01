@@ -10,11 +10,13 @@ class Writer:
                 "that": "THAT"}
 
     def __init__(self, file):
+        self.function_calls = 0
         self.filename = file
         self.asm_code = ""
 
     def write_arithmetics(self, command: str):
         # add
+        print(f"Received Command {command}.")
         if command == "add":
             self.asm_code += (f"@SP\n"
                               f"M=M-1\n"
@@ -151,7 +153,7 @@ class Writer:
                     self.asm_code += "@THIS\n"
                 else:
                     self.asm_code += "@THAT\n"
-                self.asm_code += "D=M"
+                self.asm_code += "D=M\n"
 
             elif segment == "static":
                 self.asm_code += (f"@{self.filename}.{index}\n"
@@ -181,7 +183,7 @@ class Writer:
                           f"A=M\n"
                           f"D=M\n"
                           f'@{label}\n'
-                          f'D; JLT')
+                          f'D; JGT\n')
 
     def write_function(self, function_name: str, nVars: int):
         self.asm_code += f"({function_name})\n"
@@ -191,7 +193,7 @@ class Writer:
 
     def write_call(self, function_name: str, nVars: int):
         self.asm_code += f"// Push Return Address\n"
-        self.asm_code += (f"@RETURN.{self.function_calls}\n"
+        self.asm_code += (f"@{self.filename}$ret.{self.function_calls}\n"
                           f"D=A\n"
                           f"@SP\n"
                           f"A=M\n"
@@ -250,8 +252,8 @@ class Writer:
                           "M=D\n")
 
         self.write_go_to(function_name)
-        self.asm_code += f"(RETURN.{self.function_calls})\n"
-
+        self.asm_code += f"({function_name}$ret.{self.function_calls})\n"
+        self.function_calls += 1
 
     def write_return(self):
         self.asm_code += ("// endFrame = LCL\n"
@@ -312,3 +314,12 @@ class Writer:
                           "M=D\n")
 
         self.write_go_to("retAddr")
+
+    def write_beginning(self):
+        self.asm_code += ("// SP = 256\n"
+                          "@256\n"
+                          "D=A\n"
+                          "@SP\n"
+                          "M=D\n"
+                          "// call Sys.init\n")
+        self.write_call("Sys.init", 0)
