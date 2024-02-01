@@ -1,5 +1,6 @@
 class Writer:
     op_num = 0
+    function_calls = 0
     filename = ""
     asm_code = ""
 
@@ -9,7 +10,6 @@ class Writer:
                 "that": "THAT"}
 
     def __init__(self, file):
-        self.op_num = 0
         self.filename = file
         self.asm_code = ""
 
@@ -184,10 +184,74 @@ class Writer:
                           f'D; JLT')
 
     def write_function(self, function_name: str, nVars: int):
-        pass
+        self.asm_code += f"({function_name})\n"
+        for i in range(nVars):
+            self.asm_code += f"// Push 0 #{i + 1}\n"
+            self.write_push_pop("C_PUSH", "constant", 0)
 
     def write_call(self, function_name: str, nVars: int):
-        pass
+        self.asm_code += f"// Push Return Address\n"
+        self.asm_code += (f"@RETURN.{self.function_calls}\n"
+                          f"D=A\n"
+                          f"@SP\n"
+                          f"A=M\n"
+                          f"M=D\n"
+                          f"@SP\n"
+                          f"M=M+1\n")
+
+        self.asm_code += f"// Push caller's LCL Value\n"
+        self.asm_code += (f"@LCL\n"
+                          f"D=M\n"
+                          f"@SP\n"
+                          f"A=M\n"
+                          f"M=D\n"
+                          f"@SP\n"
+                          f"M=M+1\n")
+
+        self.asm_code += f"// Push caller's ARG Value\n"
+        self.asm_code += (f"@ARG\n"
+                          f"D=M\n"
+                          f"@SP\n"
+                          f"A=M\n"
+                          f"M=D\n"
+                          f"@SP\n"
+                          f"M=M+1\n")
+
+        self.asm_code += f"// Push caller's THIS Value\n"
+        self.asm_code += (f"@THIS\n"
+                          f"D=M\n"
+                          f"@SP\n"
+                          f"A=M\n"
+                          f"M=D\n"
+                          f"@SP\n"
+                          f"M=M+1\n")
+
+        self.asm_code += f"// Push caller's THAT Value\n"
+        self.asm_code += (f"@THAT\n"
+                          f"D=M\n"
+                          f"@SP\n"
+                          f"A=M\n"
+                          f"M=D\n"
+                          f"@SP\n"
+                          f"M=M+1\n")
+
+        self.asm_code += f"// ARG = SP - 5 - nVars\n"
+        self.asm_code += (f"@SP\n"
+                          f"D=M\n"
+                          f"@{5 + nVars}\n"
+                          f"D=D-A\n"
+                          f"@ARG\n"
+                          f"M=D\n")
+
+        self.asm_code += f"// LCL = SP\n"
+        self.asm_code += ("@SP\n"
+                          "D=M\n"
+                          "@LCL\n"
+                          "M=D\n")
+
+        self.write_go_to(function_name)
+        self.asm_code += f"(RETURN.{self.function_calls})\n"
+
 
     def write_return(self):
         pass
