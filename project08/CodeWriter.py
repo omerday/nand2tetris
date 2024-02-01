@@ -254,4 +254,61 @@ class Writer:
 
 
     def write_return(self):
-        pass
+        self.asm_code += ("// endFrame = LCL\n"
+                          "@LCL\n"
+                          "D=M\n"
+                          "@endFrame\n"
+                          "M=D\n"
+                          "// retAddr = *(endFrame - 5)\n"
+                          "@5\n"
+                          "D=D-A\n"
+                          "A=D\n"
+                          "@retAddr\n"
+                          "M=D\n")
+
+        self.asm_code += ("// *ARG = pop()\n"
+                          "@SP\n"
+                          "M=M-1\n"
+                          "A=M\n"
+                          "D=M\n"
+                          "@ARG\n"
+                          "A=M\n"
+                          "M=D\n")
+
+        self.asm_code += ("// SP = ARG + 1\n"
+                          "D=D+1\n"
+                          "@SP\n"
+                          "M=D\n")
+
+        self.asm_code += ("// THAT = *(endFrame - 1)\n"
+                          "@endFrame\n"
+                          "D=M\n"
+                          "D=D-1\n"
+                          "@THAT\n"
+                          "M=D\n")
+
+        self.asm_code += ("// THIS = *(endFrame - 2)\n"
+                          "@endFrame\n"
+                          "D=M\n"
+                          "@2\n"
+                          "D=D-M\n"
+                          "@THIS\n"
+                          "M=D\n")
+
+        self.asm_code += ("// ARG = *(endFrame - 3)\n"
+                          "@endFrame\n"
+                          "D=M\n"
+                          "@3\n"
+                          "D=D-M\n"
+                          "@ARG\n"
+                          "M=D\n")
+
+        self.asm_code += ("// LCL = *(endFrame - 4)\n"
+                          "@endFrame\n"
+                          "D=M\n"
+                          "@4\n"
+                          "D=D-M\n"
+                          "@LCL\n"
+                          "M=D\n")
+
+        self.write_go_to("retAddr")
