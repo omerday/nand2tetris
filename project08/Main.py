@@ -23,7 +23,7 @@ def parse_file(curr_parser: Parser.Parser, curr_writer: CodeWriter.Writer):
         elif c_type == "C_CALL":
             curr_writer.write_call(curr_parser.arg1(), curr_parser.arg2())
         elif c_type == "C_RETURN":
-            function_label_prefix = ""
+            # function_label_prefix = ""
             curr_writer.write_return()
         elif c_type in ["C_POP", "C_PUSH"]:
             curr_writer.write_push_pop(c_type, curr_parser.arg1(), curr_parser.arg2())
@@ -38,6 +38,12 @@ if os.path.isdir(path):
     if path.endswith("/"):
         path = path[:-1]
     first_file = True
+    # if "Sys.vm" in os.listdir(path):
+    #     parser = Parser.Parser(f"{path}/Sys.vm")
+    #     writer = CodeWriter.Writer("Sys")
+    #     writer.write_beginning()
+    #     parse_file(parser, writer)
+    #     asm_code += writer.asm_code
     for file in os.listdir(path):
         if file.endswith(".vm"):
             parser = Parser.Parser(f"{path}/{file}")
@@ -55,8 +61,9 @@ if os.path.isdir(path):
 else:
     parser = Parser.Parser(path)
     writer = CodeWriter.Writer(path.split("/")[-1][:-3])
-    # writer.write_beginning()
 
+    # if parser.has_function():
+    #     writer.write_beginning()
     parse_file(parser, writer)
 
     with open(f"{path[:-3]}.asm", "w") as f:

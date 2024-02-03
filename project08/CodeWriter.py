@@ -183,7 +183,7 @@ class Writer:
                           f"A=M\n"
                           f"D=M\n"
                           f'@{label}\n'
-                          f'D; JGT\n')
+                          f'D; JNE\n')
 
     def write_function(self, function_name: str, nVars: int):
         self.asm_code += f"({function_name})\n"
@@ -193,7 +193,7 @@ class Writer:
 
     def write_call(self, function_name: str, nVars: int):
         self.asm_code += f"// Push Return Address\n"
-        self.asm_code += (f"@{self.filename}$ret.{self.function_calls}\n"
+        self.asm_code += (f"@{function_name}$ret.{self.function_calls}\n"
                           f"D=A\n"
                           f"@SP\n"
                           f"A=M\n"
@@ -259,13 +259,14 @@ class Writer:
         self.asm_code += ("// endFrame = LCL\n"
                           "@LCL\n"
                           "D=M\n"
-                          "@endFrame\n"
+                          "@R13\n"
                           "M=D\n"
                           "// retAddr = *(endFrame - 5)\n"
                           "@5\n"
                           "D=D-A\n"
                           "A=D\n"
-                          "@retAddr\n"
+                          "D=M\n"
+                          "@R14\n"
                           "M=D\n")
 
         self.asm_code += ("// *ARG = pop()\n"
@@ -278,42 +279,54 @@ class Writer:
                           "M=D\n")
 
         self.asm_code += ("// SP = ARG + 1\n"
+                          "@ARG\n"
+                          "D=M\n"
                           "D=D+1\n"
                           "@SP\n"
                           "M=D\n")
 
         self.asm_code += ("// THAT = *(endFrame - 1)\n"
-                          "@endFrame\n"
+                          "@R13\n"
                           "D=M\n"
                           "D=D-1\n"
+                          "A=D\n"
+                          "D=M\n"
                           "@THAT\n"
                           "M=D\n")
 
         self.asm_code += ("// THIS = *(endFrame - 2)\n"
-                          "@endFrame\n"
+                          "@R13\n"
                           "D=M\n"
                           "@2\n"
-                          "D=D-M\n"
+                          "D=D-A\n"
+                          "A=D\n"
+                          "D=M\n"
                           "@THIS\n"
                           "M=D\n")
 
         self.asm_code += ("// ARG = *(endFrame - 3)\n"
-                          "@endFrame\n"
+                          "@R13\n"
                           "D=M\n"
                           "@3\n"
-                          "D=D-M\n"
+                          "D=D-A\n"
+                          "A=D\n"
+                          "D=M\n"
                           "@ARG\n"
                           "M=D\n")
 
         self.asm_code += ("// LCL = *(endFrame - 4)\n"
-                          "@endFrame\n"
+                          "@R13\n"
                           "D=M\n"
                           "@4\n"
-                          "D=D-M\n"
+                          "D=D-A\n"
+                          "A=D\n"
+                          "D=M\n"
                           "@LCL\n"
                           "M=D\n")
 
-        self.write_go_to("retAddr")
+        self.asm_code += ("@R14\n"
+                          "A=M\n"
+                          "0;JMP\n")
 
     def write_beginning(self):
         self.asm_code += ("// SP = 256\n"

@@ -41,3 +41,9 @@ class Parser:
     def arg2(self):
         command_parts = self.current_instruction.split(" ")
         return int(command_parts[2])
+
+    def has_function(self):
+        for line in self.lines:
+            if line.startswith("function"):
+                return True
+        return False
