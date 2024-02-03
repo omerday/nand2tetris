@@ -9,7 +9,6 @@ def parse_file(curr_parser: Parser.Parser, curr_writer: CodeWriter.Writer):
     while curr_parser.has_more_lines():
         curr_parser.advance()
         c_type = curr_parser.command_type()
-        print(f"Command - {curr_parser.current_instruction}\nCommandType = {c_type}")
         curr_writer.asm_code += f"// {curr_parser.current_instruction}\n"
         if c_type == "C_FUNCTION":
             function_label_prefix = curr_parser.arg1() + "$"

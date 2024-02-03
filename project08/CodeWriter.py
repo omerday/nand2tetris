@@ -16,7 +16,6 @@ class Writer:
 
     def write_arithmetics(self, command: str):
         # add
-        print(f"Received Command {command}.")
         if command == "add":
             self.asm_code += (f"@SP\n"
                               f"M=M-1\n"

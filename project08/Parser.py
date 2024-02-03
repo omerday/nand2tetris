@@ -28,7 +28,6 @@ class Parser:
 
     def command_type(self):
         command_parts = self.current_instruction.split(" ")
-        print(command_parts)
         return f"C_{command_parts[0].upper()}" if command_parts[0] != "if-goto" else "C_IF"
 
     def arg1(self):
