@@ -1,6 +1,6 @@
-SYMBOLS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 'void',
+KEYWORDS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 'void',
            'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return']
-KEYWORDS = ['{', '}', '[', ']', '(', ')', '.', ',', ';', '+', '-', '*', '/', '&', '|', '>', '<', '=', '~']
+SYMBOLS = ['{', '}', '[', ']', '(', ')', '.', ',', ';', '+', '-', '*', '/', '&', '|', '>', '<', '=', '~']
 
 
 class Tokenizer:
@@ -16,9 +16,13 @@ class Tokenizer:
         return self.remaining_code != ""
 
     def advance(self):
-        while (self.remaining_code.startswith(" ") or self.remaining_code.startswith("\n")
-               or self.remaining_code.startswith("\t")):
-            self.remaining_code = self.remaining_code[1:]
+        while self.remaining_code != "" and (self.remaining_code[0] in ["\n", "\t", " "] or self.remaining_code.startswith("//") or self.remaining_code.startswith("/**")):
+            if self.remaining_code.startswith("//"):
+                self.remaining_code = self.remaining_code[self.remaining_code.find("\n") + 1:]
+            elif self.remaining_code[0] in ["\n", "\t", " "]:
+                self.remaining_code = self.remaining_code[1:]
+            elif self.remaining_code.startswith("/**"):
+                self.remaining_code = self.remaining_code[self.remaining_code.find("*/") + 2:]
         while self.has_more_tokens():
             for keyword in KEYWORDS:
                 if self.remaining_code.startswith(keyword):
@@ -32,24 +36,25 @@ class Tokenizer:
                     return
             if self.remaining_code[0].isdigit():
                 i = 1
-                while self.remaining_code[i].isdigit():
+                while self.remaining_code[i] and self.remaining_code[i].isdigit():
                     i = i + 1
-                self.current_token = int(self.remaining_code[0, i])
+                self.current_token = int(self.remaining_code[0: i])
                 self.remaining_code = self.remaining_code[i:]
                 return
             elif self.remaining_code.startswith("\""):
                 i = 1
-                while self.remaining_code[i] != "\"":
+                while self.remaining_code[i] and self.remaining_code[i] != "\"":
                     i = i + 1
                 self.current_token = self.remaining_code[0: i + 1]
                 self.remaining_code = self.remaining_code[i + 1:]
                 return
             elif self.remaining_code[0].isalpha():
                 i = 1
-                while (self.remaining_code[i].isdigit() or self.remaining_code[i].isalpha()
+                while self.remaining_code[i] and (self.remaining_code[i].isdigit() or self.remaining_code[i].isalpha()
                        or self.remaining_code[i] == "_"):
                     i = i + 1
-                self.remaining_code = self.remaining_code[:i]
+                self.current_token = self.remaining_code[:i]
+                self.remaining_code = self.remaining_code[i:]
                 return
             else:
                 self.remaining_code = self.remaining_code[1:]
@@ -59,10 +64,10 @@ class Tokenizer:
             return "KEYWORD"
         elif self.current_token in SYMBOLS:
             return "SYMBOL"
-        elif self.current_token[0] == "\"":
-            return "STRING_CONST"
-        elif self.current_token[0].isdigit():
+        elif type(self.current_token) == int:
             return "INT_CONST"
+        elif self.current_token[0] == '\"':
+            return "STRING_CONST"
         else:
             return "IDENTIFIER"
 
