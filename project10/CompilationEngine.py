@@ -181,7 +181,7 @@ class Compiler:
                     f"<keyword> {self.__process__('do')} </keyword>\n")
 
         xml_code += self.compile_identifier()
-        if self.tokenizer.current_token == ".":
+        while self.tokenizer.current_token == ".":
             xml_code += f"<symbol> {self.__process__('.')} </symbol>\n"
             xml_code += self.compile_identifier()
 
@@ -207,7 +207,53 @@ class Compiler:
         return xml_code
 
     def compile_expression(self):
-        pass
+        xml_code = "<expression>\n"
+        while self.tokenizer.current_token not in [',',';']:
+            if self.tokenizer.current_token == '(':
+                xml_code += f"<symbol> {self.__process__('(')} </symbol>\n"
+                xml_code += self.compile_expression()
+                xml_code += f"<symbol> {self.__process__(')')} </symbol>\n"
+            elif self.tokenizer.current_token in OPS:
+                xml_code += f"<symbol> {self.__process__(self.tokenizer.current_token)} </symbol>\n"
+                xml_code += self.compile_term()
+            else:
+                xml_code += self.compile_term()
+        xml_code += "</expression>\n"
+        return xml_code
+
+    def compile_term(self):
+        xml_code = "<term>\n"
+        if self.tokenizer.current_token in UNARY_OPS:
+            xml_code += f"<symbol> {self.__process__(self.tokenizer.current_token)} </symbol>\n"
+            xml_code += self.compile_term()
+        elif self.tokenizer.token_type() == "INT_CONST":
+            xml_code += f"<integerConstant> {self.__process__(self.tokenizer.current_token)} </integerConstant>\n"
+        elif self.tokenizer.token_type() == "STRING_CONST":
+            xml_code += f"<stringConstant> {self.__process__(self.tokenizer.current_token)} </stringConstant>\n"
+        elif self.tokenizer.current_token in KEYWORD_CONSTANTS:
+            xml_code += f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>\n"
+        else:
+            xml_code += f"<identifier> {self.__process__(self.tokenizer.current_token)} </identifier>\n"
+            if self.tokenizer.current_token == '.':
+                xml_code += (f"<symbol> {self.__process__('.')} </symbol>\n"
+                             f"<identifier> {self.__process__(self.tokenizer.current_token)} </identifier>\n")
+            if self.tokenizer.current_token == '(':
+                xml_code += (f"<symbol> {self.__process__('(')} </symbol>\n"
+                             f"<expressionList>\n")
+                xml_code += self.compile_expression()
+                while self.tokenizer.current_token == ',':
+                    xml_code += f"<symbol> {self.__process__(',')} </symbol>\n"
+                    xml_code += self.compile_expression()
+                xml_code += ("</expressionList>\n"
+                             f"<symbol> {self.__process__(')')} </symbol>\n")
+            elif self.tokenizer.current_token == '[':
+                xml_code += f"<symbol> {self.__process__('[')} </symbol>\n"
+                xml_code += self.compile_expression()
+                xml_code += f"<symbol> {self.__process__(']')} </symbol>\n"
+
+        xml_code += "</term>\n"
+        return xml_code
+
 
     def compile_identifier(self):
         xml_code = ""
@@ -218,6 +264,9 @@ class Compiler:
     def __process__(self, string):
         return_str = ""
         if self.tokenizer.current_token == string:
-            return_str = string
+            if self.tokenizer.token_type() == "STRING_CONST":
+                return_str = self.tokenizer.string_val()
+            else:
+                return_str = string
         self.tokenizer.advance()
         return return_str
