@@ -238,16 +238,15 @@ class Compiler:
         print(f"in compile_expression with token {self.tokenizer.current_token}")
         xml_code = ""
         if self.tokenizer.current_token not in [',',';', ']', ')', '}']:
-            xml_code = "<expression>\n"
             while self.tokenizer.current_token not in [',',';', ']', ')', '}']:
+                xml_code = "<expression>\n"
                 if self.tokenizer.current_token == '(':
-                    xml_code += self.compile_term()
-                    # xml_code += f"<symbol> {self.__process__('(')} </symbol>\n"
-                    # if self.tokenizer.current_token in UNARY_OPS:
-                    #     xml_code += self.compile_term()
-                    # else:
-                    #     xml_code += self.compile_expression()
-                    # xml_code += f"<symbol> {self.__process__(')')} </symbol>\n"
+                    xml_code += f"<symbol> {self.__process__('(')} </symbol>\n"
+                    if self.tokenizer.current_token in UNARY_OPS:
+                        xml_code += self.compile_term()
+                    else:
+                        xml_code += self.compile_expression()
+                    xml_code += f"<symbol> {self.__process__(')')} </symbol>\n"
                 elif self.tokenizer.current_token in UNARY_OPS:
                     xml_code += self.compile_term()
                 elif self.tokenizer.current_token in OPS:
@@ -255,7 +254,7 @@ class Compiler:
                     xml_code += self.compile_term()
                 else:
                     xml_code += self.compile_term()
-            xml_code += "</expression>\n"
+                xml_code += "</expression>\n"
         return xml_code
 
     def compile_term(self):
