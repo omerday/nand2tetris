@@ -11,6 +11,7 @@ class Tokenizer:
         self.current_token = ""
         with open(filepath, "r") as file:
             self.remaining_code = file.read()
+        self.advance()
 
     def has_more_tokens(self):
         return self.remaining_code != ""

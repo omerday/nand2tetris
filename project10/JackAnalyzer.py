@@ -1,7 +1,9 @@
 import JackTokenizer
 import CompilationEngine
-class Analyzer:
+from xml.dom import minidom
 
+
+class Analyzer:
     filepath = ""
     xml_content = ""
     tokenizer = None
@@ -14,6 +16,7 @@ class Analyzer:
         self.compiler = CompilationEngine.Compiler(self.tokenizer)
 
     def analyze(self):
-        while self.tokenizer.has_more_tokens():
-            self.tokenizer.advance()
-            print(f"token - {self.tokenizer.current_token}, token type = {self.tokenizer.token_type()}")
+        xml_code = self.compiler.compile_class()
+        xml_path = self.filepath[:-5] + "1.xml"
+        with open(xml_path, 'w') as file:
+            file.write(xml_code)

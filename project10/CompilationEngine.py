@@ -13,6 +13,7 @@ class Compiler:
         self.tokenizer = tokenizer
 
     def compile_class(self):
+        print(f"in compile_class with token {self.tokenizer.current_token}")
         xml_code = (f"<class>\n"
                     f"<keyword> {self.__process__('class')} </keyword>\n")
         xml_code += self.compile_identifier()
@@ -29,13 +30,15 @@ class Compiler:
 
         xml_code += f"<symbol> {self.__process__('}')} </symbol>\n"
         xml_code += "</class>\n"
+        return xml_code
 
     def compile_class_var_dec(self):
+        print(f"in compile_class_var_dec with token {self.tokenizer.current_token}")
         xml_code = (f"<classVarDec>\n"
-                    f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword\n")
+                    f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>\n")
 
         if self.tokenizer.current_token in VAR_TYPES:
-            xml_code += f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword\n"
+            xml_code += f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>\n"
         else:
             xml_code += self.compile_identifier()
 
@@ -49,8 +52,9 @@ class Compiler:
         return xml_code
 
     def compile_subroutine(self):
+        print(f"in compile_subroutine with token {self.tokenizer.current_token}")
         xml_code = (f"<subroutineDec>\n"
-                    f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>")
+                    f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>\n")
 
         if self.tokenizer.current_token in VAR_TYPES:
             xml_code += f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>\n"
@@ -62,9 +66,11 @@ class Compiler:
         xml_code += self.compile_parameter_list()
         xml_code += f"<symbol> {self.__process__(')')} </symbol>\n"
         xml_code += self.compile_subroutine_body()
+        xml_code += f"</subroutineDec>\n"
         return xml_code
 
     def compile_parameter_list(self):
+        print(f"in compile_parameter_list with token {self.tokenizer.current_token}")
         xml_code = f"<parameterList>\n"
         if self.tokenizer.current_token != ")":
             if self.tokenizer.current_token in VAR_TYPES:
@@ -85,36 +91,42 @@ class Compiler:
         return xml_code
 
     def compile_subroutine_body(self):
+        print(f"in compile_subroutine_body with token {self.tokenizer.current_token}")
         xml_code = (f"<subroutineBody>\n"
                     f"<symbol> {self.__process__('{')} </symbol>\n")
 
         while self.tokenizer.current_token != '}':
-            xml_code += "<statements>\n"
             xml_code += self.compile_statement()
-            xml_code += "</statements>\n"
 
         xml_code += (f"<symbol> {self.__process__('}')} </symbol>\n"
                      f"</subroutineBody>\n")
         return xml_code
 
     def compile_statement(self):
-        if self.tokenizer.current_token == "var":
-            return self.compile_var_dec()
-        elif self.tokenizer.current_token == "let":
-            return self.compile_let()
-        elif self.tokenizer.current_token == "do":
-            return self.compile_do()
-        elif self.tokenizer.current_token == "if":
-            return self.compile_if()
-        elif self.tokenizer.current_token == "while":
-            return self.compile_while()
-        elif self.tokenizer.current_token == "return":
-            return self.compile_if()
+        print(f"in compile_statement with token {self.tokenizer.current_token}")
+        xml_code = ""
+        if self.tokenizer.current_token in ["let", "while", "if", "do", "return"]:
+            xml_code += "<statements>\n"
+            while self.tokenizer.current_token in ["let", "while", "if", "do", "return"]:
+                if self.tokenizer.current_token == "let":
+                    xml_code += self.compile_let()
+                elif self.tokenizer.current_token == "if":
+                    xml_code += self.compile_if()
+                elif self.tokenizer.current_token == "do":
+                    xml_code += self.compile_do()
+                elif self.tokenizer.current_token == "return":
+                    xml_code += self.compile_return()
+                else:
+                    xml_code += self.compile_while()
+            xml_code += "</statements>\n"
         else:
-            return
+            xml_code += self.compile_var_dec()
+        return xml_code
 
     def compile_var_dec(self):
-        xml_code = f"<varDec>\n"
+        print(f"in compile_var_dec with token {self.tokenizer.current_token}")
+        xml_code = (f"<varDec>\n"
+                    f"<keyword> {self.__process__('var')} </keyword>\n")
         if self.tokenizer.current_token in VAR_TYPES:
             xml_code += f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>\n"
         else:
@@ -130,6 +142,7 @@ class Compiler:
         return xml_code
 
     def compile_let(self):
+        print(f"in compile_let with token {self.tokenizer.current_token}")
         xml_code = (f"<letStatement>\n"
                     f"<keyword> {self.__process__('let')} </keyword>\n")
         xml_code += self.compile_identifier()
@@ -144,39 +157,51 @@ class Compiler:
         return xml_code
 
     def compile_if(self):
+        print(f"in compile_if with token {self.tokenizer.current_token}")
         xml_code = (f"<ifStatement>\n"
                     f"<keyword> {self.__process__('if')} </keyword>\n"
-                    f"<keyword> {self.__process__('(')} </keyword>\n")
+                    f"<symbol> {self.__process__('(')} </symbol>\n")
 
         xml_code += self.compile_expression()
 
-        xml_code += (f"<keyword> {self.__process__(')')} </keyword>\n"
-                     f"<keyword> {self.__process__('{')} </keyword>\n")
+        xml_code += (f"<symbol> {self.__process__(')')} </symbol>\n"
+                     f"<symbol> {self.__process__('{')} </symbol>\n")
 
         while self.tokenizer.current_token != "}":
             xml_code += self.compile_statement()
 
-        xml_code += (f"<keyword> {self.__process__('}')} </keyword>\n"
-                     f"</ifStatement>\n")
+        xml_code += f"<symbol> {self.__process__('}')} </symbol>\n"
+        if self.tokenizer.current_token == "else":
+            xml_code += (f"<keyword> {self.__process__('else')} </keyword>\n"
+                         f"<symbol> {self.__process__('{')} </symbol>\n")
+
+            while self.tokenizer.current_token != "}":
+                xml_code += self.compile_statement()
+
+            xml_code += f"<symbol> {self.__process__('}')} </symbol>\n"
+        xml_code += f"</ifStatement>\n"
+        return xml_code
 
     def compile_while(self):
+        print(f"in compile_while with token {self.tokenizer.current_token}")
         xml_code = (f"<whileStatement>\n"
                     f"<keyword> {self.__process__('while')} </keyword>\n"
-                    f"<keyword> {self.__process__('(')} </keyword>\n")
+                    f"<symbol> {self.__process__('(')} </symbol>\n")
 
         xml_code += self.compile_expression()
 
-        xml_code += (f"<keyword> {self.__process__(')')} </keyword>\n"
-                     f"<keyword> {self.__process__('{')} </keyword>\n")
+        xml_code += (f"<symbol> {self.__process__(')')} </symbol>\n"
+                     f"<symbol> {self.__process__('{')} </symbol>\n")
 
         while self.tokenizer.current_token != "}":
             xml_code += self.compile_statement()
 
-        xml_code += (f"<keyword> {self.__process__('}')} </keyword>\n"
+        xml_code += (f"<symbol> {self.__process__('}')} </symbol>\n"
                      f"</whileStatement>\n")
         return xml_code
 
     def compile_do(self):
+        print(f"in compile_do with token {self.tokenizer.current_token}")
         xml_code = (f"<doStatement>\n"
                     f"<keyword> {self.__process__('do')} </keyword>\n")
 
@@ -193,35 +218,48 @@ class Compiler:
             xml_code += self.compile_expression()
         xml_code += (f"</expressionList>\n"
                      f"<symbol> {self.__process__(')')} </symbol>\n"
+                     f"<symbol> {self.__process__(';')} </symbol>\n"
                      f"</doStatement>\n")
         return xml_code
 
     def compile_return(self):
+        print(f"in compile_return with token {self.tokenizer.current_token}")
         xml_code = (f"<returnStatement>\n"
                     f"<keyword> {self.__process__('return')} </keyword>\n")
 
         if self.tokenizer.current_token != ';':
             xml_code += self.compile_expression()
-        xml_code += f"<symbol> {self.__process__(';')} </symbol>\n"
+        xml_code += (f"<symbol> {self.__process__(';')} </symbol>\n"
+                     f"</returnStatement>\n")
 
         return xml_code
 
     def compile_expression(self):
-        xml_code = "<expression>\n"
-        while self.tokenizer.current_token not in [',',';']:
-            if self.tokenizer.current_token == '(':
-                xml_code += f"<symbol> {self.__process__('(')} </symbol>\n"
-                xml_code += self.compile_expression()
-                xml_code += f"<symbol> {self.__process__(')')} </symbol>\n"
-            elif self.tokenizer.current_token in OPS:
-                xml_code += f"<symbol> {self.__process__(self.tokenizer.current_token)} </symbol>\n"
-                xml_code += self.compile_term()
-            else:
-                xml_code += self.compile_term()
-        xml_code += "</expression>\n"
+        print(f"in compile_expression with token {self.tokenizer.current_token}")
+        xml_code = ""
+        if self.tokenizer.current_token not in [',',';', ']', ')', '}']:
+            xml_code = "<expression>\n"
+            while self.tokenizer.current_token not in [',',';', ']', ')', '}']:
+                if self.tokenizer.current_token == '(':
+                    xml_code += self.compile_term()
+                    # xml_code += f"<symbol> {self.__process__('(')} </symbol>\n"
+                    # if self.tokenizer.current_token in UNARY_OPS:
+                    #     xml_code += self.compile_term()
+                    # else:
+                    #     xml_code += self.compile_expression()
+                    # xml_code += f"<symbol> {self.__process__(')')} </symbol>\n"
+                elif self.tokenizer.current_token in UNARY_OPS:
+                    xml_code += self.compile_term()
+                elif self.tokenizer.current_token in OPS:
+                    xml_code += f"<symbol> {self.__process__(self.tokenizer.current_token)} </symbol>\n"
+                    xml_code += self.compile_term()
+                else:
+                    xml_code += self.compile_term()
+            xml_code += "</expression>\n"
         return xml_code
 
     def compile_term(self):
+        print(f"in compile_term with token {self.tokenizer.current_token}")
         xml_code = "<term>\n"
         if self.tokenizer.current_token in UNARY_OPS:
             xml_code += f"<symbol> {self.__process__(self.tokenizer.current_token)} </symbol>\n"
@@ -232,6 +270,10 @@ class Compiler:
             xml_code += f"<stringConstant> {self.__process__(self.tokenizer.current_token)} </stringConstant>\n"
         elif self.tokenizer.current_token in KEYWORD_CONSTANTS:
             xml_code += f"<keyword> {self.__process__(self.tokenizer.current_token)} </keyword>\n"
+        elif self.tokenizer.current_token == '(':
+            xml_code += f"<symbol> {self.__process__('(')} </symbol>\n"
+            xml_code += self.compile_expression()
+            xml_code += f"<symbol> {self.__process__(')')} </symbol>\n"
         else:
             xml_code += f"<identifier> {self.__process__(self.tokenizer.current_token)} </identifier>\n"
             if self.tokenizer.current_token == '.':
@@ -256,9 +298,10 @@ class Compiler:
 
 
     def compile_identifier(self):
+        print(f"in compile_identifier with token {self.tokenizer.current_token}")
         xml_code = ""
         if self.tokenizer.token_type() == "IDENTIFIER":
-            xml_code = f"<identifier>{self.__process__(self.tokenizer.current_token)}</identifier>\n"
+            xml_code = f"<identifier> {self.__process__(self.tokenizer.current_token)} </identifier>\n"
         return xml_code
 
     def __process__(self, string):
@@ -266,6 +309,14 @@ class Compiler:
         if self.tokenizer.current_token == string:
             if self.tokenizer.token_type() == "STRING_CONST":
                 return_str = self.tokenizer.string_val()
+            elif self.tokenizer.current_token == '>':
+                return_str = '&gt;'
+            elif self.tokenizer.current_token == '<':
+                return_str = '&lt;'
+            elif self.tokenizer.current_token == '\"':
+                return_str = '&quot;'
+            elif self.tokenizer.current_token == '&':
+                return_str = '&amp;'
             else:
                 return_str = string
         self.tokenizer.advance()
