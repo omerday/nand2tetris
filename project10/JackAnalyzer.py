@@ -1,6 +1,40 @@
 import JackTokenizer
 import CompilationEngine
-from xml.dom import minidom
+import sys
+import os
+
+path = sys.argv[1]
+
+if os.path.isdir(path):
+    asm_code = ""
+    if path.endswith("/"):
+        path = path[:-1]
+    for file in os.listdir(path):
+        if file.endswith('.jack'):
+            filepath_src = path + '/' + file
+            filepath_dest = path + '/' + file[:-5] + ".xml"
+            tokenizer = JackTokenizer.Tokenizer(filepath_src)
+            compiler = CompilationEngine.Compiler(tokenizer)
+
+            xml_code = compiler.compile_class()
+            with open(filepath_dest, 'w') as f:
+                f.write(xml_code)
+            del tokenizer
+            del compiler
+
+else:
+    if path.endswith('.jack'):
+        filepath_src = path
+        filepath_dest = path[:-5] + ".xml"
+        tokenizer = JackTokenizer.Tokenizer(filepath_src)
+        compiler = CompilationEngine.Compiler(tokenizer)
+
+        xml_code = compiler.compile_class()
+        with open(filepath_dest, 'w') as f:
+            f.write(xml_code)
+        del tokenizer
+        del compiler
+
 
 
 class Analyzer:
